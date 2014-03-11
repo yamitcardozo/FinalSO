@@ -7,8 +7,11 @@ import java.util.Map;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.AlertDialog.Builder;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -25,7 +28,9 @@ public class CannonView extends SurfaceView
 {
    private CannonThread cannonThread; // controls the game loop
    private Activity activity; // to display Game Over dialog in GUI thread
+   private Activity Activity2;
    private boolean dialogIsDisplayed = false;   
+   private boolean dialogo= false;
                
    // constants for game play
    public static final int TARGET_PIECES = 7; // sections in the target
@@ -86,6 +91,11 @@ public class CannonView extends SurfaceView
    private Paint targetPaint; // Paint used to draw the target
    private Paint backgroundPaint; // Paint used to clear the drawing area
 
+   
+   //variables resultados del juego
+    static int tiros;
+ 	static double tiempo;
+   
    // public constructor
    public CannonView(Context context, AttributeSet attrs)
    {
@@ -407,15 +417,63 @@ public class CannonView extends SurfaceView
    // display an AlertDialog when the game ends
    private void showGameOverDialog(int messageId)
    {
+	   
+	   
+	   
+	   final AlertDialog.Builder dialogoDatos=
+			   new AlertDialog.Builder(getContext());
+	   dialogoDatos.setTitle("jugador");
+	      dialogoDatos.setCancelable(false);
+	      dialogoDatos.setMessage(" formulario jugador");
+	      
+	      dialogoDatos.setPositiveButton("archivar jugador",
+	    	         new DialogInterface.OnClickListener()
+	    	         {
+	    	            // called when "Reset Game" Button is pressed
+	    	            @Override
+	    	            public void onClick(DialogInterface dialog, int which)
+	    	            {
+	    	               dialogo = false;
+	    	               newGame();
+	    	            } // end method onClick
+	    	         } // end anonymous inner class
+	    	      ); // end call to setPositiveButton
+	      		
+	    	      activity.runOnUiThread(
+	    	         new Runnable() {
+	    	            public void run()
+	    	            {
+	    	             dialogo = true;
+	    	               dialogoDatos.show(); // display the dialog
+	    	              
+	    	            } // end method run
+	    	         } // end Runnable
+	    	      ); // end call to runOnUiThread
+	      		
+	      
       // create a dialog displaying the given String
       final AlertDialog.Builder dialogBuilder = 
          new AlertDialog.Builder(getContext());
       dialogBuilder.setTitle(getResources().getString(messageId));
       dialogBuilder.setCancelable(false);
-
+      
+      
       // display number of shots fired and total time elapsed
       dialogBuilder.setMessage(getResources().getString(
-         R.string.results_format, shotsFired, totalElapsedTime));
+        R.string.results_format, shotsFired, totalElapsedTime));
+      	
+      	//AccesoDatos a = new AccesoDatos();
+      	//a.llenaPuntaje();
+      	//variables resultantes
+      	tiros = shotsFired;
+      	tiempo = totalElapsedTime;
+      	 //final AlertDialog.Builder dialogBuilder1 = 
+      	   //      new AlertDialog.Builder(getContext());
+      	    //   dialogBuilder.setTitle(getResources().getString(messageId));
+      	    //  dialogBuilder.setCancelable(false);
+      	      
+      	 //dialogBuilder1.setMessage("  "+ tiros+"  "+tiempo);
+      	      	
       dialogBuilder.setPositiveButton(R.string.reset_game,
          new DialogInterface.OnClickListener()
          {
@@ -424,7 +482,7 @@ public class CannonView extends SurfaceView
             public void onClick(DialogInterface dialog, int which)
             {
                dialogIsDisplayed = false;
-               newGame(); // set up and start a new game
+               //newGame(); // set up and start a new game
             } // end method onClick
          } // end anonymous inner class
       ); // end call to setPositiveButton
@@ -435,6 +493,7 @@ public class CannonView extends SurfaceView
             {
                dialogIsDisplayed = true;
                dialogBuilder.show(); // display the dialog
+               
             } // end method run
          } // end Runnable
       ); // end call to runOnUiThread
