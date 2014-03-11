@@ -2,8 +2,13 @@
 // Displays the Cannon Game
 package com.deitel.cannongame;
 
+import java.io.FileNotFoundException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+
+import com.deitel.cannongame.DatosLocal.DatosLocal;
+import com.deitel.cannongame.http.asincrono.AsincronoRequerimiento;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -26,6 +31,9 @@ import android.view.SurfaceView;
 public class CannonView extends SurfaceView 
    implements SurfaceHolder.Callback
 {
+	
+	int i=0;
+	
    private CannonThread cannonThread; // controls the game loop
    private Activity activity; // to display Game Over dialog in GUI thread
    private Activity Activity2;
@@ -420,7 +428,7 @@ public class CannonView extends SurfaceView
 	   
 	   
 	   
-	   final AlertDialog.Builder dialogoDatos=
+	  /* final AlertDialog.Builder dialogoDatos=
 			   new AlertDialog.Builder(getContext());
 	   dialogoDatos.setTitle("jugador");
 	      dialogoDatos.setCancelable(false);
@@ -449,8 +457,17 @@ public class CannonView extends SurfaceView
 	    	            } // end method run
 	    	         } // end Runnable
 	    	      ); // end call to runOnUiThread
-	      		
+	      		*/
 	      
+	   
+	   
+	   if(i>=10){
+		   return;
+	   }
+	   
+	 //se obtiene la fecha de hoy
+	   java.util.Date fecha = new Date();
+	   
       // create a dialog displaying the given String
       final AlertDialog.Builder dialogBuilder = 
          new AlertDialog.Builder(getContext());
@@ -461,18 +478,17 @@ public class CannonView extends SurfaceView
       // display number of shots fired and total time elapsed
       dialogBuilder.setMessage(getResources().getString(
         R.string.results_format, shotsFired, totalElapsedTime));
+      
+  	tiros = shotsFired;
+  	tiempo = totalElapsedTime;
+      
+  	//envia puntaje archivo plano
+      puntajeLocal("Jugador"+i,fecha,shotsFired,shotsFired);
+     //invia puntaje al servidor
+      puntajeServidor("Jugador"+i,fecha,shotsFired,shotsFired);
       	
-      	//AccesoDatos a = new AccesoDatos();
-      	//a.llenaPuntaje();
-      	//variables resultantes
-      	tiros = shotsFired;
-      	tiempo = totalElapsedTime;
-      	 //final AlertDialog.Builder dialogBuilder1 = 
-      	   //      new AlertDialog.Builder(getContext());
-      	    //   dialogBuilder.setTitle(getResources().getString(messageId));
-      	    //  dialogBuilder.setCancelable(false);
-      	      
-      	 //dialogBuilder1.setMessage("  "+ tiros+"  "+tiempo);
+      
+      	
       	      	
       dialogBuilder.setPositiveButton(R.string.reset_game,
          new DialogInterface.OnClickListener()
@@ -481,8 +497,9 @@ public class CannonView extends SurfaceView
             @Override
             public void onClick(DialogInterface dialog, int which)
             {
+            	i=i+1;
                dialogIsDisplayed = false;
-               //newGame(); // set up and start a new game
+               newGame(); // set up and start a new game
             } // end method onClick
          } // end anonymous inner class
       ); // end call to setPositiveButton
@@ -499,6 +516,20 @@ public class CannonView extends SurfaceView
       ); // end call to runOnUiThread
    } // end method showGameOverDialog
 
+   public void puntajeLocal(String usuario,java.util.Date fecha,int shotsFired,int totalElapsedTime){
+	   DatosLocal d = new DatosLocal();
+	   try {
+		d.grabar(usuario,fecha,shotsFired,totalElapsedTime);
+	} catch (FileNotFoundException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	}
+   }
+   
+   public void puntajeServidor(String usuario,java.util.Date fecha,int shotsFired,int totalElapsedTime){
+	   AsincronoRequerimiento asyncHttpRequestManager = new AsincronoRequerimiento(this.getContext(),usuario, fecha, shotsFired,totalElapsedTime);
+	   asyncHttpRequestManager.execute();
+   }
    // stops the game
    public void stopGame()
    {
